@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Application</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f7f7f7;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: background 0.3s;
+        }
+        h1 {
+            color: #4a4a4a;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .navbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .navbar button {
+            padding: 5px 10px;
+            font-size: 0.9em;
+            background: #28a745; /* Green color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .navbar button:hover {
+            background: #218838; /* Darker green on hover */
+            transform: scale(1.05);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            background: #fafafa;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+        video, canvas, img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background: #28a745; /* Green color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 1em;
+        }
+        button:hover {
+            background: #218838; /* Darker green on hover */
+            transform: scale(1.05);
+        }
+        input[type="range"], input[type="file"] {
+            width: 80%;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #777;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background: #333;
+            color: #f7f7f7;
+        }
+        .container.dark-mode {
+            background: #444;
+        }
+        .section.dark-mode {
+            background: #555;
+        }
+        .navbar button.dark-mode {
+            background: #007bff; /* Blue for dark mode */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <button id="theme-toggle">Toggle Dark Mode</button>
+            <button id="about-title">About Us
+                <span id="arrow">▼</span>
+            </button>
+            <button id="help-title">Help
+                <span id="help-arrow">▼</span>
+            </button>
+        </div>
+
+        <h1>OCR Application</h1>
+
+        <div class="section camera-container" id="camera-container">
+            <h2>Take Picture or Upload Image</h2>
+            <video id="video" autoplay></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+            <br>
+            <button id="capture-btn">Capture Image</button>
+            <br>
+            <input type="file" id="upload-input" accept="image/*">
+            <button id="upload-btn">Upload Image</button>
+        </div>
+
+        <div class="section image-container hidden" id="image-container">
+            <h2>Captured/Uploaded Image</h2>
+            <img id="captured-image" alt="Captured or Uploaded Image" />
+            <br>
+            <label for="brightness">Brightness:</label>
+            <input type="range" id="brightness" min="0" max="200" value="100">
+            <br>
+            <label for="contrast">Contrast:</label>
+            <input type="range" id="contrast" min="0" max="200" value="100">
+            <br>
+            <button id="process-btn">Process OCR</button>
+            <br>
+            <button id="try-again-btn">Try Again</button>
+        </div>
+
+        <div id="output-container" class="hidden" style="margin-top: 10px;">
+            <h2>OCR Output</h2>
+            <div id="output">Captured or uploaded text will appear here.</div>
+        </div>
+
+        <ul id="about-list" class="hidden">
+            <li>1. Abduselam Jibril - UGR/23323/13</li>
+            <li>2. Dagim Bekele - UGR/23590/23</li>
+            <li>3. Abel Legese - UGR/22736/13</li>
+            <li>4. Belayneh Sewareg - UGR/23590/13</li>
+        </ul>
+
+        <ul id="help-list" class="hidden">
+            <li><strong>Capture Image:</strong> Click the "Capture Image" button to take a photo using your camera.</li>
+            <li><strong>Upload Image:</strong> Use the "Upload Image" button to select an image file from your device.</li>
+            <li><strong>Adjust Settings:</strong> Use the brightness and contrast sliders to adjust the image quality.</li>
+            <li><strong>Process OCR:</strong> Click "Process OCR" to extract text from the image.</li>
+            <li><strong>Try Again:</strong> If you want to capture or upload a new image, click "Try Again".</li>
+        </ul>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2024 OCR Application ASTU. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const uploadInput = document.getElementById('upload-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const processBtn = document.getElementById('process-btn');
+        const tryAgainBtn = document.getElementById('try-again-btn');
+        const output = document.getElementById('output');
+        const capturedImage = document.getElementById('captured-image');
+        const cameraContainer = document.getElementById('camera-container');
+        const imageContainer = document.getElementById('image-container');
+        const brightnessSlider = document.getElementById('brightness');
+        const contrastSlider = document.getElementById('contrast');
+        const themeToggle = document.getElementById('theme-toggle');
+        const aboutTitle = document.getElementById('about-title');
+        const aboutList = document.getElementById('about-list');
+        const arrow = document.getElementById('arrow');
+        const helpTitle = document.getElementById('help-title');
+        const helpList = document.getElementById('help-list');
+        const helpArrow = document.getElementById('help-arrow');
+        const outputContainer = document.getElementById('output-container');
+
+        let capturedImageData = null;
+        let imageCanvas = document.createElement('canvas');
+        let imageCtx = imageCanvas.getContext('2d');
+
+        // Access the camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                output.textContent = 'Unable to access the camera.';
+            });
+
+        // Capture image
+        captureBtn.addEventListener('click', () => {
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImageData = canvas.toDataURL('image/png');
+
+            cameraContainer.classList.add('hidden');
+            imageContainer.classList.remove('hidden');
+            capturedImage.src = capturedImageData;
+
+            imageCanvas.width = canvas.width;
+            imageCanvas.height = canvas.height;
+            imageCtx.drawImage(canvas, 0, 0);
+        });
+
+        // Upload image
+        uploadBtn.addEventListener('click', () => {
+            const file = uploadInput.files[0];
+            if (!file) {
+                output.textContent = 'No file selected.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                capturedImageData = event.target.result;
+                cameraContainer.classList.add('hidden');
+                imageContainer.classList.remove('hidden');
+                capturedImage.src = capturedImageData;
+
+                const img = new Image();
+                img.onload = function () {
+                    imageCanvas.width = img.width;
+                    imageCanvas.height = img.height;
+                    imageCtx.drawImage(img, 0, 0);
+                };
+                img.src = capturedImageData;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Adjust brightness and contrast
+        function adjustImage() {
+            const brightness = brightnessSlider.value / 100;
+            const contrast = contrastSlider.value / 100;
+
+            const img = new Image();
+            img.onload = function () {
+                imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+                imageCtx.drawImage(img, 0, 0, imageCanvas.width, imageCanvas.height);
+
+                const imageData = imageCtx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+                const data = imageData.data;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = contrast * (data[i] - 128) + 128 + brightness * 128;
+                    data[i + 1] = contrast * (data[i + 1] - 128) + 128 + brightness * 128;
+                    data[i + 2] = contrast * (data[i + 2] - 128) + 128 + brightness * 128;
+                }
+
+                imageCtx.putImageData(imageData, 0, 0);
+                capturedImage.src = imageCanvas.toDataURL('image/png');
+            };
+            img.src = capturedImageData;
+        }
+
+        brightnessSlider.addEventListener('input', adjustImage);
+        contrastSlider.addEventListener('input', adjustImage);
+
+        // Process OCR
+        processBtn.addEventListener('click', () => {
+            if (!capturedImageData) {
+                output.textContent = 'No image captured or uploaded.';
+                return;
+            }
+
+            fetch('/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: capturedImage.src }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    output.textContent = data.text || 'No text detected.';
+                    outputContainer.classList.remove('hidden'); // Show the output container
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    output.textContent = 'Error processing the image.';
+                    outputContainer.classList.remove('hidden'); // Show the output container
+                });
+        });
+
+        // Try Again button
+        tryAgainBtn.addEventListener('click', () => {
+            imageContainer.classList.add('hidden');
+            cameraContainer.classList.remove('hidden');
+            output.textContent = 'Captured or uploaded text will appear here.';
+            outputContainer.classList.add('hidden'); // Hide output container again
+        });
+
+        // Toggle dark mode
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            document.querySelector('.container').classList.toggle('dark-mode');
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.toggle('dark-mode');
+            });
+            document.querySelectorAll('.navbar button').forEach(button => {
+                button.classList.toggle('dark-mode');
+            });
+        });
+
+        // Toggle About Us section visibility
+        aboutTitle.addEventListener('click', () => {
+            aboutList.classList.toggle('hidden');
+            arrow.style.transform = aboutList.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        // Toggle Help section visibility
+        helpTitle.addEventListener('click', () => {
+            helpList.classList.toggle('hidden');
+            helpArrow.style.transform = helpList.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+    </script>
+</body>
+</html>
